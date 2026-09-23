@@ -1,0 +1,45 @@
+﻿name: Publish Windows Vulkan backend
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release tag to build from the private ARCaiL repository
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  windows-vulkan-llama-cpp:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout ARCaiL source
+        uses: actions/checkout@v7
+        with:
+          repository: ARCStoryKraft/ARCaiL
+          ref: ${{ inputs.version }}
+          token: ${{ secrets.ARCAIL_SOURCE_TOKEN }}
+          fetch-depth: 1
+      - name: Configure MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Install native dependencies
+        shell: pwsh
+        run: vcpkg install grpc:x64-windows-static protobuf:x64-windows-static vulkan:x64-windows-static
+      - name: Build llama.cpp Vulkan backend
+        shell: pwsh
+        run: ./scripts/build/llama-cpp-windows-vulkan.ps1
+      - name: Validate release package
+        shell: pwsh
+        run: |
+          $archive = './dist/arcail-backend-windows-amd64-vulkan-llama-cpp.zip'
+          if (-not (Test-Path -LiteralPath $archive -PathType Leaf)) {
+            throw "Required release archive missing: $archive"
+          }
+      - name: Publish public backend release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ inputs.version }}
+          name: ARCaiL native backends ${{ inputs.version }}
+          files: ./dist/arcail-backend-windows-amd64-vulkan-llama-cpp.zip

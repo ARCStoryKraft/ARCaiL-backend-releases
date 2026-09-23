@@ -1,2 +1,3 @@
-# ARCaiL-backend-releases
-Public binary releases for ARCaiL native backends
+﻿# ARCaiL backend releases
+
+Public binary release artifacts for ARCaiL native backends. ARCaiL source remains in its private repository.
